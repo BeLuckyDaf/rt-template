@@ -8,7 +8,7 @@
 
 Denoising::Denoising(short width, short height) : AABB(width, height)
 {
-	raytracing_depth = 16;
+	raytracing_depth = 24;
 }
 
 Denoising::~Denoising()
@@ -35,7 +35,7 @@ Payload Denoising::Hit(const Ray& ray, const IntersectableData& data, const Mate
     {
         float3 reflection_direction = ray.direction - 2.0f * dot(N, ray.direction) * N;
         Ray reflection_ray(X, reflection_direction);
-        return TraceRay(reflection_ray, raytracing_depth - 1);
+        return TraceRay(reflection_ray, max_raytrace_depth - 1);
     }
 
     // Diffuse
@@ -69,12 +69,12 @@ Payload Denoising::Hit(const Ray& ray, const IntersectableData& data, const Mate
 
 void Denoising::SetHistory(unsigned short x, unsigned short y, float3 color)
 {
-	history_buffer[y * width + x] = color;
+	history_buffer[static_cast<size_t>(y)* static_cast<size_t>(width) + static_cast<size_t>(x)] = color;
 }
 
 float3 Denoising::GetHistory(unsigned short x, unsigned short y) const
 {
-	return history_buffer[y * width + x];
+	return history_buffer[static_cast<size_t>(y) * static_cast<size_t>(width) + static_cast<size_t>(x)];
 }
 
 
@@ -104,6 +104,7 @@ void Denoising::DrawScene(int max_frame_number)
             {
                 Ray ray = camera.GetCameraRay(x, y);
                 Payload payload = TraceRay(ray, raytracing_depth);
+                SetPixel(x, y, payload.color);
                 SetHistory(x, y, GetHistory(x, y) + payload.color);
             }
         }
@@ -126,9 +127,10 @@ void Denoising::LoadBlueNoise(std::string file_name)
 	unsigned char* img = stbi_load(file_name.c_str(), &width, &height, &channels, 0);
 	for (int i = 0; i < width * height; i++) 
 	{
-        float3 pixel{ (img[channels * i] - 128.f) / 128.f,
-                     (img[channels * i + 1] - 128.f) / 128.f,
-                     (img[channels * i + 2] - 128.f) / 128.f };
+        float3 pixel{
+            (img[channels * i] - 128.f) / 128.f,
+            (img[channels * i + 1] - 128.f) / 128.f,
+            (img[channels * i + 2] - 128.f) / 128.f };
         blue_noise.push_back(pixel);
 	}
 }
