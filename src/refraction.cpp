@@ -42,7 +42,8 @@ Payload Refraction::Hit(const Ray& ray, const IntersectableData& data, const Mat
         else
         {
             float cost = sqrtf(std::max(0.f, 1 - sint * sint));
-            float cosi = fabs(cosi);
+            float cosit = cosi;
+            float cosi = fabs(cosit);
             float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
             float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
             kr = (Rs * Rs + Rp * Rp) / 2.f;
