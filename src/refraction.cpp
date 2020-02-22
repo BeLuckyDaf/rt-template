@@ -11,10 +11,6 @@ Refraction::~Refraction()
 
 Payload Refraction::Hit(const Ray& ray, const IntersectableData& data, const MaterialTriangle* triangle, const unsigned int max_raytrace_depth) const
 {
-    if (max_raytrace_depth <= 0)
-    {
-        return Miss(ray);
-    }
     if (triangle == nullptr) return Miss(ray);
     Payload payload;
     payload.color = triangle->emissive_color;
@@ -30,7 +26,7 @@ Payload Refraction::Hit(const Ray& ray, const IntersectableData& data, const Mat
 
     if (triangle->reflectiveness_and_transparency)
     {
-        float kr;
+        float kr = 1.f;
         float cosi = std::max(-1.f, std::min(1.f, dot(ray.direction, N)));
         float etai = 1.f;
         float etat = triangle->ior;
@@ -56,23 +52,20 @@ Payload Refraction::Hit(const Ray& ray, const IntersectableData& data, const Mat
         float3 bias = 0.001f * N;
         Payload refraction_payload;
 
-        if (kr < 1)
+        if (kr < 1.f)
         {
             float cosi = std::max(-1.f, std::min(1.f, dot(ray.direction, N)));
             float etai = 1.f;
             float etat = triangle->ior;
-            if (cosi < 0)
-            {
-                cosi = -cosi;
-            }
-            else
+            if (cosi > 0.f)
             {
                 std::swap(etai, etat);
             }
+            cosi = fabs(cosi);
             float eta = etai / etat;
             float k = 1.f - eta * eta * (1.f - cosi * cosi);
             float3 refraction_direction{ 0,0,0 };
-            if (k >= 0)
+            if (k >= 0.f)
             {
                 refraction_direction = eta * ray.direction + (eta * cosi - sqrtf(k)) * N;
             }
@@ -84,18 +77,18 @@ Payload Refraction::Hit(const Ray& ray, const IntersectableData& data, const Mat
         Payload reflection_payload = TraceRay(reflection_ray, max_raytrace_depth - 1);
 
         Payload final;
-        final.color = reflection_payload.color * kr + refraction_payload.color * (1 - kr);
+        final.color = reflection_payload.color * kr + refraction_payload.color * (1.f - kr);
         return final;
     }
 
     // Diffuse
-    for (auto light : lights)
+    for (auto& light : lights)
     {
         Ray to_light(X, light->position - X);
         float to_light_distance = length(light->position - X);
 
         float t = TraceShadowRay(to_light, to_light_distance);
-        if (fabs(t - to_light_distance) > 1e-3f)
+        if (fabs(t - to_light_distance) > t_min)
         {
             continue;
         }
