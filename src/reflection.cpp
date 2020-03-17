@@ -25,7 +25,7 @@ Payload Reflection::Hit(const Ray& ray, const IntersectableData& data, const Mat
     {
         float3 reflection_direction = ray.direction - 2.0f * dot(N, ray.direction) * N;
         Ray reflection_ray(X, reflection_direction);
-        return TraceRay(reflection_ray, raytracing_depth - 1);
+        return TraceRay(reflection_ray, raytrace_depth - 1);
     }
 
     // Diffuse

@@ -158,3 +158,4 @@ float3 MaterialTriangle::GetNormal(float3 barycentric) const
     }
     return geo_normal;
 }
+

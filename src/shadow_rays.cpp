@@ -10,6 +10,7 @@ ShadowRays::~ShadowRays()
 
 Payload ShadowRays::TraceRay(const Ray& ray, const unsigned int max_raytrace_depth) const
 {
+    if (max_raytrace_depth <= 0) return Miss(ray);
     IntersectableData closest_data(t_max);
     MaterialTriangle* closest_triange = nullptr;
 
